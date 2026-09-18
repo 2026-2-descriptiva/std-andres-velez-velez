@@ -120,9 +120,3 @@ with open(f"{OUTPUT_FOLDER}/_SUCCESS", "w", encoding="utf-8") as f:
 
 end_time = time.time()
 print(f"Tiempo de ejecución: {end_time - start_time:.2f} segundos")
-
-
-
-
-
-            
