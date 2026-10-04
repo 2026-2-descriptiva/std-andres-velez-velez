@@ -5,7 +5,7 @@ from pathlib import Path
 # -----------------------------------
 # Cargar las rutas de manera relativa
 # -----------------------------------
-DATA_DIR = Path('LAB_01_python_basico/data')
+DATA_DIR = Path(__file__).resolve().parent.parent / 'data'
 DATA_FILE = DATA_DIR / 'data.csv.gz'
 
 # ---------------------------------
