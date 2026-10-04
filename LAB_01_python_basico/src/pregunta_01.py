@@ -1,3 +1,19 @@
+import pandas as pd
+from pathlib import Path
+
+
+# -----------------------------------
+# Cargar las rutas de manera relativa
+# -----------------------------------
+DATA_DIR = Path('LAB_01_python_basico/data')
+DATA_FILE = DATA_DIR / 'data.csv.gz'
+
+# ---------------------------------
+# Validar la existencia del archivo
+# ---------------------------------
+assert DATA_FILE.exists()
+
+
 def pregunta_01():
     """
     Calcule la suma de los valores de la segunda columna (`value`) del
@@ -7,5 +23,12 @@ def pregunta_01():
 
         214
     """
+    data = pd.read_csv(DATA_FILE, sep="\t", header=None)    # Leer los datos
+    suma_columna1 = data[1].sum()                           # Sumar valores columna 1
 
-    raise NotImplementedError
+    return int(suma_columna1)
+
+# ----------------------------------
+# Validar resultado
+# ----------------------------------
+print(pregunta_01())
