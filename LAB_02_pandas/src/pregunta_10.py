@@ -1,3 +1,6 @@
+import pandas as pd
+from pathlib import Path
+
 def pregunta_10():
     """
     Usando `data/tbl0.tsv`, construya para cada categoría de la columna `c1`
@@ -14,5 +17,19 @@ def pregunta_10():
         C           0:5:6:7:9
         ...
     """
+    DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+    DATA_FILE = DATA_DIR / "tbl0.tsv"
+    data_0 = pd.read_csv(DATA_FILE, sep="\t")
 
-    raise NotImplementedError
+    resultado = (
+                data_0.groupby("c1")["c2"]                       # s recibe los valores de c2 agrupados por c1
+                .apply(lambda s: ":".join(map(str, sorted(s))))  # map aplica str a cada elemento, joint une cada elemento mediante :
+                .to_frame()
+                )
+
+    return resultado
+
+# -------------------------------------------------------------
+# VALIDAR RESPUESTA
+# -------------------------------------------------------------
+print(pregunta_10())

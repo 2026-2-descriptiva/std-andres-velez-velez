@@ -1,3 +1,6 @@
+import pandas as pd
+from pathlib import Path
+
 def pregunta_08():
     """
     Retorne la tabla `data/tbl0.tsv` completa con una columna adicional
@@ -11,5 +14,14 @@ def pregunta_08():
         2    2  B   5  1998-05-02     7
         ...
     """
+    DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+    DATA_FILE = DATA_DIR / "tbl0.tsv"
+    data_0 = pd.read_csv(DATA_FILE, sep="\t")
+    data_0["suma"] = data_0["c0"] + data_0["c2"]
 
-    raise NotImplementedError
+    return data_0
+
+# ------------------------------------------------------------
+# VALIDAR RESPUESTA
+# ------------------------------------------------------------
+print(pregunta_08())
