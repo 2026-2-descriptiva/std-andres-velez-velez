@@ -1,3 +1,6 @@
+import pandas as pd
+from pathlib import Path
+
 def pregunta_01():
     """
     El archivo `data/clusters_report.txt` es un reporte de clústeres de
@@ -25,5 +28,19 @@ def pregunta_01():
         1        2                         102                          15.4
         ...
     """
+    DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+    DATA_FILE = DATA_DIR / "clusters_report.txt"
+    registros = []
 
-    raise NotImplementedError
+    with open(DATA_FILE, encoding="UTF-8") as archivo:
+        lineas = archivo.readlines()
+        for linea in lineas:
+            linea = linea.strip()
+            registros.append(linea)
+        data = pd.DataFrame(registros, columns=["cluster"])
+
+    return registros
+
+
+print(pregunta_01())
+
