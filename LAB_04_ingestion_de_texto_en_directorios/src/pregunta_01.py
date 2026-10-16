@@ -1,3 +1,6 @@
+import pandas as pd
+from pathlib import Path
+
 def pregunta_01():
     """
     Las frases de este laboratorio no están en una tabla, sino en miles de
