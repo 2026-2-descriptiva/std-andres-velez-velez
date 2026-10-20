@@ -36,9 +36,9 @@ def pregunta_01():
 
     for nombre, ruta in conjuntos.items():  # nombre = llave y ruta = valor, ambos se llaman con .items()
         registros = []                      # La lista debe crearse dentro del ciclo for para evitar doble conteo
-        for carpeta in ruta.iterdir():      # Con iterdir() se leen todos los elementos, de la primera capa, al interior de carpeta: negative, neutral y positive
+        for carpeta in sorted(ruta.iterdir()):      # Con iterdir() se leen todos los elementos, de la primera capa, al interior de carpeta: negative, neutral y positive
             if carpeta.is_dir():            # Se verifica si los elementos (negative, neutral, positive) son carpetas. 
-                for archivo in carpeta.glob("*.txt"):   # Se seleccionan todos los archivos de extensión .txt
+                for archivo in sorted(carpeta.glob("*.txt")):   # Se seleccionan todos los archivos de extensión .txt
                     registros.append({                  # Se incluye el contenido de todos estos archivos en el diccionario registros
                         "phrase": archivo.read_text(encoding="utf-8").strip(),
                         "target": carpeta.name
