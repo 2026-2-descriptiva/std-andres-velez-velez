@@ -21,3 +21,5 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+SELECT COUNT(K0) AS "COUNT(*)"
+FROM tbl1

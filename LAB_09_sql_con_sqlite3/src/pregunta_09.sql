@@ -21,3 +21,7 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+SELECT
+    K1, c21, c22, c23, c24, c25
+FROM tbl2
+WHERE c21 = (SELECT MIN(c21) FROM tbl2)

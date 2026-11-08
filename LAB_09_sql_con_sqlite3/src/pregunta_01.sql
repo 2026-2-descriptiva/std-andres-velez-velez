@@ -21,3 +21,5 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+SELECT SUM(c12) AS "SUM(c12)"
+FROM tbl1
