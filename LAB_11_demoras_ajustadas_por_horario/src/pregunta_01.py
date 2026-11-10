@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 
 def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -57,5 +58,63 @@ def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame]:
         EV,819223,...,1,1
         ...
     """
+    # DEFINIR LAS RUTAS
+    DATA_DIR = Path(__file__).parent.parent / "data"
+    DATA_FILE = DATA_DIR / "flights_by_carrier_day_hour.csv.gz"
+    SUBMISSION_DIR = Path(__file__).parent.parent / "submission"
+    SUBMISSION_HOURLY_DELAY = SUBMISSION_DIR / "hourly_delay_rates.csv"
+    SUBMISSION_CARRIER_ADJUSTED_DELAYS = SUBMISSION_DIR / "carrier_adjusted_delays.csv"
 
-    raise NotImplementedError
+    # CARGAR LOS DATOS
+    datos = pd.read_csv(DATA_FILE, compression="gzip")
+
+    # AGRUPACION POR HORA
+    agrupacion_x_hora_demora = (datos.groupby("scheduled_departure_hour", as_index=False)                             # Se agrupa por scheduled_departure_hour como indica el enunciado
+                                [["operated_flights", "delayed_departure_15_flights"]].sum()                          # Se toman las dos columnas requeridas para calcular el índice y se suma cada agrupación generada para tener los datos listos para generar el índice
+                                )
+    
+    # AGRUPACION POR HORA Y AEROLINEA
+    agrupacion_x_aerolinea_y_hora = (datos.groupby(["reporting_airline", "scheduled_departure_hour"], as_index=False) # Se agrupa por aerolínea y hora
+                                     [["operated_flights", "delayed_departure_15_flights"]].sum()
+                                     )
+    
+    # AGRUPACION POR HORA: CALCULA DE LA TASA DE DEMORA NACIONAL (TND)
+    agrupacion_x_hora_demora["delay_rate"] = (agrupacion_x_hora_demora["delayed_departure_15_flights"] / agrupacion_x_hora_demora["operated_flights"])                                            # Se calcula la TND agrupando por hora
+    # AGRUPACION POR AEROLINEA Y HORA: CALCULA LA DEMORA ESPERADA POR AEROLÍNEA Y HORA USANDO LA TND
+    agrupacion_x_aerolinea_y_hora_tnd = pd.merge(agrupacion_x_aerolinea_y_hora, agrupacion_x_hora_demora[["delay_rate", "scheduled_departure_hour"]], on="scheduled_departure_hour", how="left")  # Se hace un merge para tener la TND por hora en el dataframe de aerolíneas y horas
+    agrupacion_x_aerolinea_y_hora_tnd["expected_delayed_flights"] = (agrupacion_x_aerolinea_y_hora_tnd["delay_rate"] * agrupacion_x_aerolinea_y_hora_tnd["operated_flights"])                                   # Se calcula la demora esperada por aerolínea y hora
+
+    # AGRUPACION POR AEROLINEA: SE AGRUPA POR AEROLINEA NUEVAMENTE PARA OBTENER UNA DEMORA ESPERADA ÚNICA POR AEROLINEA
+    agrupacion_aerolinea_tnd = (agrupacion_x_aerolinea_y_hora_tnd.groupby("reporting_airline", as_index=False)                                     # Se agrupa nuevamente por aerolínea dado que en agrupacion_x_aerolinea_y_hora_tnd se agrupó por hora y aerolínea, dando más de una observación para cada aerolínea. Se requiere una sola observación por aerolínea.
+                                [["operated_flights", "delayed_departure_15_flights", "expected_delayed_flights"]].sum()
+                                )
+    # SE APLICA FILTRO POR NÚMERO DE VUELOS OPERADOS
+    datos_filtrados = agrupacion_aerolinea_tnd.copy()
+    datos_filtrados = datos_filtrados[datos_filtrados["operated_flights"] >= 100000]
+
+    # CALCULO DE LA DEMORA OBSERVADA VS ESPERADA, TASA DE DEMORA, RANKING CRUDO Y RANKING AJUSTADO
+    datos_filtrados["observed_to_expected_ratio"] = (datos_filtrados["delayed_departure_15_flights"] / datos_filtrados["expected_delayed_flights"])  # Se calcula la demora observada vs esperada por aerolínea
+    datos_filtrados["delay_rate"] = datos_filtrados["delayed_departure_15_flights"] / datos_filtrados["operated_flights"]
+    datos_filtrados["crude_rank"] = datos_filtrados["delay_rate"].rank(ascending=False).astype(int)                   # ascending=False para ir de mayor a menor delay, el ranking en enteros para seguir las instrucciones del enunciado
+    datos_filtrados["adjusted_rank"] = datos_filtrados["observed_to_expected_ratio"].rank(ascending=False).astype(int)  # ascending=False para ir de mayor a menor razón, el ranking en enteros para seguir las instrucciones del enunciado
+    datos_filtrados = datos_filtrados.sort_values("adjusted_rank").reset_index(drop=True)
+
+    # ORDENAR COLUMNAS DE CADA TABLA EN EL ORDEN SOLICITADO
+    HOURLY_DELAY_RATES_COLUMNS = ["scheduled_departure_hour", "operated_flights", "delayed_departure_15_flights", "delay_rate"]
+    CARRIER_ADJUSTED_DELAYS_COLUMNS = ["reporting_airline", "operated_flights", "delayed_departure_15_flights", "delay_rate",
+                                    "expected_delayed_flights", "observed_to_expected_ratio", "crude_rank", "adjusted_rank"]
+    
+    agrupacion_x_hora_demora = agrupacion_x_hora_demora[HOURLY_DELAY_RATES_COLUMNS]
+    datos_filtrados = datos_filtrados[CARRIER_ADJUSTED_DELAYS_COLUMNS]
+
+    # GUARDAR COMO CSV
+    with open(SUBMISSION_HOURLY_DELAY, "w") as f:
+        agrupacion_x_hora_demora.to_csv(f, index=False)
+
+    with open(SUBMISSION_CARRIER_ADJUSTED_DELAYS, "w") as f:
+        datos_filtrados.to_csv(f, index=False)
+
+    return agrupacion_x_hora_demora, datos_filtrados
+
+if __name__ == "__main__":
+    pregunta_01()
